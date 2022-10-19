@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ group.title }}{% endblock %}
 {% block content %}
-  <div class="container">
-    <h1>{{ group.title }}</h1>
-    <p>{{ group.description|linebreaksbr }}</p>
-    {% for post in posts %}
-      <article>
-        {% include "includes/article.html" %}
-      </article>
-      {% if not forloop.last %}<hr>{% endif %}
-    {% endfor %}
-  </div>
+  <h1>{{ group.title }}</h1>
+  <p>{{ group.description|linebreaksbr }}</p>
+  {% for post in posts %}
+    {% include "includes/article.html" %}
+    {% if not forloop.last %}{% endif %}
+  {% endfor %}
 {% endblock %}

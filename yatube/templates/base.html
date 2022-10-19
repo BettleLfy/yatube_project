@@ -1,13 +1,9 @@
-<!DOCTYPE html> <!-- Используется html 5 версии -->
+<!DOCTYPE html>
 <html lang="ru">
-  <!-- Язык сайта - русский -->
   <head>
     {% load static %}
     <meta charset="utf-8">
-    <!-- Кодировка сайта -->
-    <!-- Сайт готов работать с мобильными устройствами -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Загружаем фав-иконки -->
     <link rel="icon" href={% static "img/fav/fav.ico" %} type="image">
     <link rel="apple-touch-icon" sizes="180x180" href="{% static "img/fav/apple-touch-icon.png" %}>
     <link rel="icon"
@@ -33,7 +29,9 @@
       {% include "includes/header.html" %}
     </header>
     <main>
-      {% block content %}<!-- Содержимое страницы -->{% endblock %}
+      <div class="container">
+        {% block content %}Дефолтный контент{% endblock %}
+      </div>
     </main>
     <footer>
       {% include "includes/footer.html" %}

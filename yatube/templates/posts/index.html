@@ -2,14 +2,6 @@
 {% block title %}Главная страница{% endblock %}
 {% block content %}
   {% for post in posts %}
-    <div class="container py-5">
-      <article>
-        {% include "includes/article.html" %}
-        {% if post.group %}
-          <a href = "{% url 'posts:group_list' post.group.slug %}">все записи группы</a>
-        {% endif %}
-        {% if not forloop.last %}<hr>{% endif %}
-      </article>
-    </div>
+    {% include "includes/article.html" %}
   {% endfor %}
 {% endblock %}
