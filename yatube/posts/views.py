@@ -2,13 +2,14 @@ from django.shortcuts import render, get_object_or_404
 
 from .models import Group, Post
 
+POSTS_CNT = 10
+
 
 def index(request):
     # Одна строка вместо тысячи слов на SQL:
     # в переменную posts будет сохранена выборка из 10 объектов модели Post,
     # отсортированных по полю pub_date по убыванию (от больших к меньшим)
-    POSTS_COUNT = 10
-    posts = Post.objects.order_by('-pub_date')[:POSTS_COUNT]
+    posts = Post.objects.select_related('author', 'group')[:POSTS_CNT]
     # В словаре context отправляем информацию в шаблон
     context = {
         'posts': posts,
@@ -17,9 +18,8 @@ def index(request):
 
 
 def group_posts(request, slug):
-    GRP_COUNTS = 10
     group = get_object_or_404(Group, slug=slug)
-    posts = Post.objects.filter(group=group).order_by('-pub_date')[:GRP_COUNTS]
+    posts = group.content.select_related('author')[:POSTS_CNT]
     context = {
         'group': group,
         'posts': posts,
