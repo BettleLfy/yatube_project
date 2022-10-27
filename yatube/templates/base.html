@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" style="min-height: 100%">
   <head>
     {% load static %}
     <meta charset="utf-8">
@@ -18,22 +18,26 @@
           {% static "img/fav/favicon-16x16.png" %}>
     <meta name="msapplication-TileColor" content="#000">
     <meta name="theme-color" content="#ffffff">
-    <!-- Подключен файл со стандартными стилями бустрап -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <title>
       {% block title %}Дефолтный тайтл{% endblock %}
     </title>
   </head>
-  <body>
+  <body style="position: relative; min-height:100vh">
     <header>
       {% include "includes/header.html" %}
     </header>
+    <p style="margin-top: 40px">
     <main>
       <div class="container">
         {% block content %}Дефолтный контент{% endblock %}
       </div>
     </main>
-    <footer>
+    </p>
+    <footer style="position: absolute;
+    bottom: -130px;
+    width: 100%;
+    height: 130px;">
       {% include "includes/footer.html" %}
     </footer>
   </body>
