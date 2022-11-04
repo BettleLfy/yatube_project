@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render, get_object_or_404
+from django.core.exceptions import PermissionDenied
 
 from .models import Group, Post, User
 from .forms import PostForm
@@ -75,8 +76,10 @@ def post_edit(request, post_id):
     groups = Group.objects.all()
     form = PostForm(request.POST or None, instance=post)
     template = 'posts/create_post.html'
-    if request.user == author:
-        if request.method == 'POST' and form.is_valid:
+    if request.user != author:
+        raise PermissionDenied()
+    else:
+        if request.method == 'POST' and form.is_valid():
             post = form.save()
             return redirect('posts:post_detail', post_id)
         context = {
@@ -84,5 +87,4 @@ def post_edit(request, post_id):
             'post': post,
             'groups': groups,
         }
-        return render(request, template, context)
-    return redirect('posts:post_detail', post_id)
+    return render(request, template, context)
