@@ -1,12 +1,22 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% block title %}Профайл пользователя {{ author }}{% endblock %}
 {% block content %}
   <main>
     <h1>Все посты пользователя {{ author.get_full_name }}</h1>
     <h3>Всего постов: {{ count }}</h3>
-    <article>
-      {% for post in page_obj %}
-        {%include 'includes/article.html'%}
+    {% for post in page_obj %}
+      {% include 'includes/article.html' %}
+      {% if author != user %}
+        {% if following %}
+          <a class="btn btn-lg btn-light"
+             href="{% url 'posts:profile_unfollow' author.username %}"
+             role="button">Отписаться</a>
+        {% else %}
+          <a class="btn btn-lg btn-primary"
+             href="{% url 'posts:profile_follow' author.username %}"
+             role="button">Подписаться</a>
+        {% endif %}
+      {% endif %}
     {% empty %}
       <p>Постов нет</p>
     {% endfor %}
