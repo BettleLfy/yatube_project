@@ -1,15 +1,22 @@
+import tempfile
+import shutil
+
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django import forms
+from django.conf import settings
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from ..models import Follow, Post, Group
+from ..forms import PostForm
 
 POSTS_TO_CREATE = 20
 AMOUNT_OF_POSTS = 10
 PAGE_COUNT = 2
 User = get_user_model()
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
 class ViewsTest(TestCase):
@@ -25,14 +32,14 @@ class ViewsTest(TestCase):
         self.post = Post.objects.create(text='Тестовый текст',
                                         group=self.group,
                                         author=self.user)
+
+    def test_correct_page_amount(self):
+        """Проверка количества постов на первой и второй страницах."""
         bilk_post = [Post(text=f'Тестовый текст {text_num}',
                           group=self.group,
                           author=self.user)
                      for text_num in range(POSTS_TO_CREATE)]
         Post.objects.bulk_create(bilk_post)
-
-    def test_correct_page_amount(self):
-        """Проверка количества постов на первой и второй страницах."""
         pages = (reverse('posts:index'),
                  reverse('posts:profile',
                          kwargs={'username': self.user.username}),
@@ -204,3 +211,73 @@ class FollowPagesTests(TestCase):
             'posts:follow_index'))
         posts_cnt_new = len(response.context['page_obj'].object_list)
         self.assertEqual(posts_cnt_new, 0)
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class PostImageTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        cls.uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=cls.small_gif,
+            content_type='image/gif'
+        )
+        cls.user = User.objects.create_user(username='auth')
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            slug='testslug',
+            description='Тестовое описание',
+        )
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый текст',
+            group=cls.group,
+            image=cls.uploaded
+        )
+        cls.post_id = cls.post.pk
+        cls.post_without_group = Post.objects.create(
+            text='Тестовый текст',
+            author=cls.user,
+            image=cls.uploaded,
+        )
+        cls.form = PostForm()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+    def setUp(self):
+        self.authorized_client = Client()
+        self.authorized_client.force_login(PostImageTests.user)
+        cache.clear()
+
+    def test_image_context(self):
+        """URL-адрес использует соответствующий шаблон с картинкой."""
+        list = (
+            reverse('posts:index'),
+            reverse(
+                'posts:group_list', kwargs={'slug': self.group.slug}),
+            reverse(
+                'posts:profile', kwargs={'username': self.user.username}),
+        )
+        for page_number in list:
+            with self.subTest(page_number=page_number):
+                response = self.authorized_client.get(page_number)
+                self.assertTrue(response.context['page_obj'][0].image)
+
+    def test_post_detail_show_image(self):
+        """Шаблон post_detail сформирован с картинкой."""
+        response = self.authorized_client.get(
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id})
+        )
+        self.assertEqual(response.context['post'].image, self.post.image)
